@@ -1,5 +1,40 @@
+
 .App {
+  font-family: Arial, sans-serif;
+  padding: 2rem;
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  border: 1px solid #a2c08f;
+  padding: 8px;
   text-align: center;
+  white-space: nowrap;
+}
+.progress-visual {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.progress-visual img {
+  max-width: 100%;
+  height: auto;
+  transition: transform 0.3s ease;
+}
+
+
+th {
+  background-color: #b7d7a8;
+}
+
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
 }
 
 .App-logo {
