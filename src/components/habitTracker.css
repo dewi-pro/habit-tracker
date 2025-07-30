@@ -398,13 +398,6 @@ body {
   margin-bottom: 25px; /* Ensure consistent spacing for section title */
 }
 
-.summary-list { /* A container for the list of summary items */
-  /* If you want a specific layout (e.g., two columns on desktop) for summary items: */
-  /* display: grid; */
-  /* grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); */
-  /* gap: 20px; */
-}
-
 .summary-item {
   margin-bottom: 20px;
 }
@@ -479,6 +472,89 @@ body {
 
 .action-icon-btn.cancel:hover {
   background-color: rgba(239, 83, 80, 0.1);
+}
+/* In your CSS file (e.g., App.css, or a dedicated MonthlySummary.css) */
+
+.overall-monthly-chart-container {
+  /* Increase the width to provide more space for the legend */
+  width: 450px; /* You might need to experiment with this value */
+  height: 300px; /* Keep height consistent, or adjust as needed */
+  margin: 20px auto; /* Center the chart horizontally */
+  position: relative;
+  /* Add display: flex to utilize space better for legend positioning */
+  display: flex;
+  justify-content: center; /* Center the chart itself */
+  align-items: center; /* Center vertically */
+}
+
+/* Ensure existing section and title styles are consistent */
+.monthly-summary-section {
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  margin-top: 30px;
+  text-align: center; /* Center the title */
+  /* If the legend is still cut off, you might need to increase the min-width or width of this section too */
+  /* min-width: 500px; */
+}
+
+.section-title {
+  color: #4CAF50;
+  margin-bottom: 25px;
+  font-size: 1.8em;
+}
+
+/* Ensure the legend labels themselves are not too large if the container adjustment isn't enough */
+/* This specific styling is applied via chartOptions in JS, but keeping it here for reference */
+/*
+.chartjs-render-monitor {
+    // This is the canvas element, its parent .overall-monthly-chart-container controls its size
+}
+*/
+
+/* Styles for the optional detail list below the chart */
+.summary-list-below-chart {
+  margin-top: 30px;
+  max-width: 500px; /* Constrain width for readability */
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 15px; /* Add some padding on sides */
+}
+
+.habit-detail-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 0.95em;
+  color: #555;
+}
+
+.habit-detail-item:last-child {
+  border-bottom: none;
+}
+
+.habit-detail-name {
+  font-weight: bold;
+  color: #333;
+}
+.habit-detail-percentage {
+    color: #4CAF50; /* A nice green for percentages */
+}
+
+/* Ensure existing section and title styles are consistent */
+.monthly-summary-section {
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  margin-top: 30px;
+  text-align: center; /* Center the title */
+}
+
+.section-title {
+  color: #4CAF50;
+  margin-bottom: 25px;
+  font-size: 1.8em;
 }
 /* ------------------------------------------- */
 /* Media Queries for Responsiveness */
