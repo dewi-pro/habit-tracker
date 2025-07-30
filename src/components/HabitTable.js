@@ -1,217 +1,215 @@
-import React, { useState } from 'react'; // Import useState
+import React, { useState } from 'react';
 
 import {
   arrayRemove,
   doc,
-  getDoc,
   updateDoc,
-} from 'firebase/firestore';
+} from 'firebase/firestore'; // Import Firestore functions
 
-import { days } from '../data/Habits'; // Ensure this path is correct
-import { db } from '../firebase'; // Ensure this path is correct
+import {
+  faEdit,
+  faSave,
+  faTimes,
+  faTrashAlt,
+} from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-const HabitTable = ({ habits, checked, currentWeek, toggleCheckbox, setHabits, setChecked }) => {
-  // New state for editing
+import { db } from '../firebase'; // Import db instance
+
+// Receive weekDates as a prop
+const HabitTable = ({ habits, checked, currentWeek, toggleCheckbox, setHabits, setChecked, days, numberOfWeeks, user, weekDates }) => {
   const [editingHabitIndex, setEditingHabitIndex] = useState(null);
   const [editedHabitName, setEditedHabitName] = useState('');
 
-  // Function to calculate completed days for the current week
-  const calculateCompletedThisWeek = (habitIndex) => {
-    const startOfDayIndex = currentWeek * days.length; // days.length should be 7
-    const endOfDayIndex = startOfDayIndex + days.length;
-    return checked[habitIndex]
-      ?.slice(startOfDayIndex, endOfDayIndex)
-      .filter(Boolean).length || 0;
-  };
+  const firstDayOfWeekIndex = currentWeek * days.length;
+  const lastDayOfWeekIndex = firstDayOfWeekIndex + days.length;
 
-  const deleteHabit = async (habitNameToDelete, habitIndex) => {
-    if (!window.confirm(`Are you sure you want to delete "${habitNameToDelete}"?`)) {
-      return; // User cancelled
-    }
-
-    const docRef = doc(db, 'habit-tracker', 'habitList');
-    try {
-      // Use arrayRemove to safely remove the specific habit name from the array
-      await updateDoc(docRef, {
-        habits: arrayRemove(habitNameToDelete),
-      });
-
-      // Update local state immediately for a snappier UI
-      setHabits(prevHabits => prevHabits.filter(h => h !== habitNameToDelete));
-
-      // Also remove the corresponding checked row from the local state
-      setChecked(prevChecked => prevChecked.filter((_, idx) => idx !== habitIndex));
-
-      alert(`Habit "${habitNameToDelete}" deleted successfully!`);
-    } catch (err) {
-      console.error('Error deleting habit:', err);
-      alert('Failed to delete habit. Please try again.');
-    }
-  };
-
-  // --- NEW: Edit Habit Functions ---
-  const startEditingHabit = (habitName, index) => {
+  const handleEditClick = (index, name) => {
     setEditingHabitIndex(index);
-    setEditedHabitName(habitName);
+    setEditedHabitName(name);
   };
 
-  const saveEditedHabit = async (originalHabitName, habitIndex) => {
+  const handleSaveEdit = async (habitIndex) => {
     if (!editedHabitName.trim()) {
       alert('Habit name cannot be empty.');
       return;
     }
-    if (editedHabitName === originalHabitName) {
-      cancelEditingHabit(); // No change, just cancel
-      return;
-    }
-    if (habits.includes(editedHabitName)) {
-      alert('A habit with this name already exists.');
+    if (!user) {
+      alert('Please log in to edit habits.');
       return;
     }
 
-    const docRef = doc(db, 'habit-tracker', 'habitList');
+    const oldHabitName = habits[habitIndex];
+    const newHabitNameTrimmed = editedHabitName.trim();
+
+    // If name hasn't changed, just exit edit mode
+    if (oldHabitName === newHabitNameTrimmed) {
+        setEditingHabitIndex(null);
+        return;
+    }
+
     try {
-      const habitsSnap = await getDoc(docRef);
-      if (habitsSnap.exists()) {
-        const currentHabits = habitsSnap.data().habits || [];
-        const updatedHabits = [...currentHabits]; // Create a mutable copy
+        const habitsDocRef = doc(db, 'users', user.uid, 'habit-data', 'habitList');
+        // Get all monthly progress docs for the user to update habit name in 'checked' object keys
+        // NOTE: This is complex. A simpler approach might be to store habits as objects with unique IDs.
+        // For this array-based approach, updating habit name implies shifting data or
+        // updating keys in ALL relevant monthly-progress documents.
+        // For simplicity and matching current data structure, we'll try to update the habits array
+        // and keep checked state indexed by position.
 
-        // Find the index of the original habit name in the Firestore array
-        // This is important because the local 'habits' state might not exactly match
-        // the order if multiple users are editing or data gets out of sync briefly.
-        // For simplicity with array updates, we'll use the passed habitIndex for now,
-        // but finding by value is more robust in a real-time scenario.
-        updatedHabits[habitIndex] = editedHabitName; // Update at the specific index
+        // 1. Update the habits array itself
+        const updatedHabits = habits.map((name, idx) =>
+            idx === habitIndex ? newHabitNameTrimmed : name
+        );
+        await updateDoc(habitsDocRef, { habits: updatedHabits });
 
-        await updateDoc(docRef, { habits: updatedHabits });
-
-        // Update local state
-        setHabits(updatedHabits); // The entire array is updated
-        alert(`Habit "${originalHabitName}" renamed to "${editedHabitName}"!`);
-      }
-
-      // Reset editing state
-      cancelEditingHabit();
-    } catch (err) {
-      console.error('Error updating habit:', err);
-      alert('Failed to update habit. Please try again.');
+        // 2. Update local state
+        setHabits(updatedHabits);
+        setEditingHabitIndex(null);
+        alert('Habit updated successfully!');
+    } catch (error) {
+        console.error('Error updating habit:', error);
+        alert('Failed to update habit. Please try again.');
     }
   };
 
-  const cancelEditingHabit = () => {
-    setEditingHabitIndex(null);
-    setEditedHabitName('');
-  };
-  // --- END NEW: Edit Habit Functions ---
 
+  const handleDeleteHabit = async (habitIndex) => {
+    if (!window.confirm(`Are you sure you want to delete "${habits[habitIndex]}"? This cannot be undone.`)) {
+      return;
+    }
+    if (!user) {
+      alert('Please log in to delete habits.');
+      return;
+    }
+
+    try {
+      // 1. Remove habit from the habits list
+      const habitToDelete = habits[habitIndex];
+      const habitsDocRef = doc(db, 'users', user.uid, 'habit-data', 'habitList');
+      await updateDoc(habitsDocRef, {
+        habits: arrayRemove(habitToDelete)
+      });
+
+      // 2. Update local habits state
+      const updatedHabits = habits.filter((_, idx) => idx !== habitIndex);
+      setHabits(updatedHabits);
+
+      // 3. Adjust checked state: remove the corresponding row
+      const updatedChecked = checked.filter((_, idx) => idx !== habitIndex);
+      setChecked(updatedChecked);
+
+      // NOTE: This simple deletion only works if you don't care about shifting
+      // habit_X keys in monthly progress documents. If habit 'A' (habit_0) is deleted,
+      // and habit 'B' was habit_1, 'B' will effectively become habit_0.
+      // This requires re-indexing all `habit_X` keys in *all* monthly progress documents.
+      // For a robust solution, consider storing habits with unique IDs instead of array index.
+      // For now, assuming index-based deletion is acceptable or handled by a full re-sync.
+
+      alert(`Habit "${habitToDelete}" deleted successfully!`);
+    } catch (error) {
+      console.error('Error deleting habit:', error);
+      alert('Failed to delete habit. Please try again.');
+    }
+  };
+
+  // Helper to format date for display (e.g., "Mon 29")
+  const formatDate = (date) => {
+    const dayName = date.toLocaleString('default', { weekday: 'short' });
+    const dayOfMonth = date.getDate();
+    return `${dayName.slice(0, 3)} ${dayOfMonth}`; // "Mon 29"
+  };
 
   return (
     <div className="habit-table-container">
       <table className="habit-table">
         <thead>
           <tr>
-            <th className="habit-name-header" rowSpan="2">Daily Habits</th>
-            <th className="completed-header" rowSpan="2">Completed</th>
-            <th className="days-header" colSpan={days.length}>Days</th>
-            <th className="action-header" rowSpan="2">Action</th>
-          </tr>
-          <tr>
-            {/* Render individual day names for the current week */}
-            {days.map((day, i) => (
-              <th key={`day-header-${i}`}>{day}</th>
+            <th>Daily Habits</th>
+            <th>Completed</th>
+            {/* Map over weekDates to display actual dates */}
+            {weekDates.map((date, index) => (
+              <th key={index}>{formatDate(date)}</th>
             ))}
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {habits.length === 0 ? (
-            <tr>
-              <td colSpan={days.length + 3} className="no-habits-message">
-                No habits added yet. Click "Add new habit" to get started!
+          {habits.map((habitName, habitIndex) => (
+            <tr key={habitIndex}>
+              <td className="habit-name-cell">
+                {editingHabitIndex === habitIndex ? (
+                  <input
+                    type="text"
+                    value={editedHabitName}
+                    onChange={(e) => setEditedHabitName(e.target.value)}
+                    className="edit-habit-input"
+                  />
+                ) : (
+                  habitName
+                )}
               </td>
-            </tr>
-          ) : (
-            habits.map((habit, i) => (
-              <tr key={`habit-row-${i}`}>
-                {editingHabitIndex === i ? (
-                  // Render input field when editing
-                  <td className="habit-name-cell edit-mode">
+              <td>
+                {/* Calculate completions for the current week only */}
+                {checked[habitIndex] ?
+                    checked[habitIndex].slice(firstDayOfWeekIndex, lastDayOfWeekIndex).filter(Boolean).length
+                    : 0
+                }
+              </td>
+              {/* Map over days.length (7) to render checkboxes for current week */}
+              {Array.from({ length: days.length }).map((_, dayOfWeekIndex) => {
+                const globalDayIndex = firstDayOfWeekIndex + dayOfWeekIndex;
+                const isChecked = checked[habitIndex]?.[globalDayIndex] || false;
+                return (
+                  <td key={globalDayIndex}>
                     <input
-                      type="text"
-                      value={editedHabitName}
-                      onChange={(e) => setEditedHabitName(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault(); // Prevent form submission
-                          saveEditedHabit(habit, i);
-                        }
-                        if (e.key === 'Escape') {
-                          cancelEditingHabit();
-                        }
-                      }}
-                      className="edit-habit-input"
+                      type="checkbox"
+                      className="custom-checkbox"
+                      checked={isChecked}
+                      onChange={() => toggleCheckbox(habitIndex, globalDayIndex)}
                     />
                   </td>
+                );
+              })}
+              <td className="action-icons-cell">
+                {editingHabitIndex === habitIndex ? (
+                  <>
+                    <button
+                      className="action-icon-btn save"
+                      onClick={() => handleSaveEdit(habitIndex)}
+                      aria-label="Save Habit"
+                    >
+                      <FontAwesomeIcon icon={faSave} />
+                    </button>
+                    <button
+                      className="action-icon-btn cancel"
+                      onClick={() => setEditingHabitIndex(null)}
+                      aria-label="Cancel Edit"
+                    >
+                      <FontAwesomeIcon icon={faTimes} />
+                    </button>
+                  </>
                 ) : (
-                  // Render habit name normally
-                  <td className="habit-name-cell">{habit}</td>
+                  <>
+                    <button
+                      className="action-icon-btn edit"
+                      onClick={() => handleEditClick(habitIndex, habitName)}
+                      aria-label="Edit Habit"
+                    >
+                      <FontAwesomeIcon icon={faEdit} />
+                    </button>
+                    <button
+                      className="action-icon-btn delete"
+                      onClick={() => handleDeleteHabit(habitIndex)}
+                      aria-label="Delete Habit"
+                    >
+                      <FontAwesomeIcon icon={faTrashAlt} />
+                    </button>
+                  </>
                 )}
-                <td>{calculateCompletedThisWeek(i)}</td>
-                {Array.from({ length: 7 }, (_, dIdx) => {
-                  const globalDayIndex = currentWeek * 7 + dIdx;
-                  return (
-                    <td key={`checkbox-${i}-${dIdx}`} className="checkbox-cell">
-                      <input
-                        type="checkbox"
-                        className="custom-checkbox"
-                        checked={checked[i]?.[globalDayIndex] || false}
-                        onChange={() => toggleCheckbox(i, globalDayIndex)}
-                        disabled={editingHabitIndex === i} // Disable checkboxes when editing
-                      />
-                    </td>
-                  );
-                })}
-                <td className="action-icons-cell">
-                  {editingHabitIndex === i ? (
-                    // Show Save/Cancel buttons when editing
-                    <>
-                      <button
-                        className="action-icon-btn save"
-                        onClick={() => saveEditedHabit(habit, i)}
-                        aria-label="Save habit name"
-                      >
-                        ✔️
-                      </button>
-                      <button
-                        className="action-icon-btn cancel"
-                        onClick={cancelEditingHabit}
-                        aria-label="Cancel editing"
-                      >
-                        ❌
-                      </button>
-                    </>
-                  ) : (
-                    // Show Edit/Delete buttons normally
-                    <>
-                      <button
-                        className="action-icon-btn edit"
-                        onClick={() => startEditingHabit(habit, i)}
-                        aria-label={`Edit habit ${habit}`}
-                      >
-                        ✎
-                      </button>
-                      <button
-                        className="action-icon-btn delete"
-                        onClick={() => deleteHabit(habit, i)}
-                        aria-label={`Delete habit ${habit}`}
-                      >
-                        🗑️
-                      </button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))
-          )}
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

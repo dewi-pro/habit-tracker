@@ -1,72 +1,77 @@
 import React from 'react';
 
 import { days } from '../data/Habits';
-import pots from './pots'; // Ensure this path is correct now
+import pots from './pots'; // Correct import for your pots object
 
-const WeeklyProgress = ({ checked, currentWeek }) => {
-  // Helper to get daily progress percentage
-  const getDayProgress = (dayIndex) => {
-    // Calculate the global index for the specific day in the checked array
-    const globalDayIndex = currentWeek * days.length + dayIndex;
+const WeeklyProgress = ({ checked, currentWeek, weekDates }) => {
+
+  const firstDayOfWeekIndex = currentWeek * days.length;
+
+  const calculateDailyPercentage = (dayGlobalIndex) => {
     let completedCount = 0;
+    // We can directly use checked.length here for total habits,
+    // assuming 'checked' always contains an array for each habit,
+    // even if it's all false or empty.
+    const totalHabits = checked.length; // FIX: Define totalHabits here
 
-    // Iterate through each habit row to count completions for this specific day
-    checked.forEach(habitRow => {
-      // Ensure habitRow and its index exist before checking
-      if (habitRow && habitRow[globalDayIndex]) {
-        completedCount++;
+    checked.forEach((habitRow) => {
+      if (habitRow && typeof habitRow[dayGlobalIndex] !== 'undefined') {
+        // totalHabitsForDay++; // Removed, as we're using checked.length for total
+        if (habitRow[dayGlobalIndex]) {
+          completedCount++;
+        }
       }
     });
 
-    const totalHabits = checked.length;
-    // Avoid division by zero if no habits are added
-    if (totalHabits === 0) {
+    if (totalHabits === 0) { // Now 'totalHabits' is defined
       return 0;
     }
-
     return Math.round((completedCount / totalHabits) * 100);
   };
 
-  // Helper to map percentage to a string stage key for the `pots` object
-  // NEW LOGIC FOR 0%, <25%, >=25%, >=50%, >=75%, 100%
   const getStageKey = (percent) => {
-    if (percent === 100) return "bloom"; // Fully bloomed at 100%
-    if (percent >= 75) return "bud";    // Bud stage from 75% up to 99%
-    if (percent >= 50) return "growing"; // Growing stage from 50% up to 74%
-    if (percent >= 25) return "sprout";  // Sprout stage from 25% up to 49%
-    if (percent > 0) return "sprout";   // If >0 but less than 25%, still a sprout, perhaps a smaller one if you made one
-    return "empty";                     // 0% or no habits
+    if (percent === 100) return "bloom";
+    if (percent >= 75) return "bud";
+    if (percent >= 50) return "growing";
+    if (percent >= 25) return "sprout";
+    if (percent > 0) return "sprout";
+    return "empty";
   };
 
-  // Helper to determine the color for the percentage text and potential progress bar (if added)
   const getProgressColor = (percent) => {
-    if (percent === 100) return "#FFD700"; // Gold/Yellow for 100% bloom
-    if (percent >= 75) return "#FF69B4";    // Hot pink for bud
-    if (percent >= 50) return "#6B8E23";    // Darker green for growing
-    if (percent >= 25) return "#8BC34A";    // Lighter green for sprout
-    if (percent > 0) return "#8BC34A";      // Still sprout green
-    return "#888";                          // Grey for 0%
+    if (percent === 100) return "#FFD700";
+    if (percent >= 75) return "#FF69B4";
+    if (percent >= 50) return "#6B8E23";
+    if (percent >= 25) return "#8BC34A";
+    if (percent > 0) return "#8BC34A";
+    return "#888";
+  };
+
+  const formatDateForProgress = (date) => {
+    const dayName = date.toLocaleString('default', { weekday: 'short' });
+    const dayOfMonth = date.getDate();
+    return `${dayName.slice(0, 3)} ${dayOfMonth}`;
   };
 
   return (
     <div className="weekly-progress-section">
       <h2 className="section-title">Week {currentWeek + 1} Progress</h2>
       <div className="progress-grid">
-        {days.map((dayName, dayIdx) => {
-          const percent = getDayProgress(dayIdx);
-          const stageKey = getStageKey(percent); // Get string key for `pots` object
-          const progressColor = getProgressColor(percent); // Get color for display
+        {weekDates.map((date, dayOfWeekIndex) => {
+          const globalDayIndex = firstDayOfWeekIndex + dayOfWeekIndex;
+          const percentage = calculateDailyPercentage(globalDayIndex);
+          const stageKey = getStageKey(percentage);
+          const progressColor = getProgressColor(percentage);
 
           return (
-            <div key={`day-progress-${dayIdx}`} className="daily-progress-card">
-              <span className="day-label">{dayName}</span>
+            <div className="daily-progress-card" key={globalDayIndex}>
+              <div className="day-label">{formatDateForProgress(date)}</div>
               <div className="plant-container">
-                {/* Render the SVG directly from the pots object */}
-                {pots[stageKey]}
+                 {pots[stageKey]}
               </div>
-              <span className="percentage" style={{ color: progressColor }}>
-                {percent}%
-              </span>
+              <div className="percentage" style={{ color: progressColor }}>
+                {percentage}%
+              </div>
             </div>
           );
         })}

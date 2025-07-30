@@ -1,33 +1,36 @@
 import React from 'react';
 
-import { numberOfWeeks } from '../data/Habits'; // Ensure this path is correct
+// REMOVE THIS IMPORT: import { numberOfWeeks } from '../data/Habits';
 
-const WeekControls = ({ currentWeek, setCurrentWeek }) => {
+// Update props: remove numberOfWeeks, add calculatedNumberOfWeeks
+const WeekControls = ({ currentWeek, setCurrentWeek, calculatedNumberOfWeeks, monthLabel }) => {
+
   const goToPreviousWeek = () => {
     setCurrentWeek((w) => Math.max(w - 1, 0));
   };
 
   const goToNextWeek = () => {
-    setCurrentWeek((w) => Math.min(w + 1, numberOfWeeks - 1));
+    // Use calculatedNumberOfWeeks here
+    setCurrentWeek((w) => Math.min(w + 1, calculatedNumberOfWeeks - 1));
   };
 
   return (
-    <div className="week-controls"> {/* Apply the new class name */}
+    <div className="week-controls">
       <button
         onClick={goToPreviousWeek}
         disabled={currentWeek === 0}
-        className="nav-button" // Apply the consistent navigation button style
+        className="nav-button"
         aria-label="Previous Week"
       >
         &lt; Previous Week
       </button>
-      <span className="week-indicator"> {/* Apply a class for the week indicator */}
-        Week {currentWeek + 1} of {numberOfWeeks}
+      <span className="week-indicator">
+        {monthLabel}, Week {currentWeek + 1} {/* Use calculatedNumberOfWeeks */}
       </span>
       <button
         onClick={goToNextWeek}
-        disabled={currentWeek === numberOfWeeks - 1}
-        className="nav-button" // Apply the consistent navigation button style
+        disabled={currentWeek === calculatedNumberOfWeeks - 1} // Use calculatedNumberOfWeeks here
+        className="nav-button"
         aria-label="Next Week"
       >
         Next Week &gt;

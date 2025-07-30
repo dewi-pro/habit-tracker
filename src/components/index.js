@@ -1,4 +1,4 @@
-import './habitTracker.css'; // Assuming this will contain your new CSS
+import './habitTracker.css';
 
 import React, {
   useCallback,
@@ -19,7 +19,6 @@ import {
   numberOfWeeks,
 } from '../data/Habits';
 import { db } from '../firebase';
-// Import your existing or new sub-components
 import HabitTable from './HabitTable';
 import MonthlySummary from './MonthlySummary';
 import WeekControls from './WeekControls';
@@ -38,28 +37,102 @@ const HabitTracker = () => {
     const month = String(today.getMonth() + 1).padStart(2, '0');
     return `${year}_${month}`;
   });
-
-  // Get user from AuthContext
+  const [calculatedNumberOfWeeks, setCalculatedNumberOfWeeks] = useState(0); // NEW STATE
   const { user, logout } = useAuth();
 
-  // Derived state for display
   const monthLabel = new Date(
     parseInt(currentMonthYear.split('_')[0]),
     parseInt(currentMonthYear.split('_')[1]) - 1
   ).toLocaleString('default', { month: 'long', year: 'numeric' });
+
+  // --- NEW: Calculate dates for the current week ---
+  const [weekDates, setWeekDates] = useState([]);
+
+  useEffect(() => {
+    const [year, month] = currentMonthYear.split('_').map(Number);
+    const firstDayOfMonth = new Date(year, month - 1, 1);
+    const lastDayOfMonth = new Date(year, month, 0); // Last day of the current month
+
+    const dayOfWeekFirstDay = firstDayOfMonth.getDay(); // 0 = Sunday, 1 = Monday
+    const offsetToMondayFirstWeek = (dayOfWeekFirstDay === 0) ? 6 : (dayOfWeekFirstDay - 1); // Days to rewind to get to the first Monday of the first displayed week
+
+    const startDateOfFirstDisplayedWeek = new Date(firstDayOfMonth);
+    startDateOfFirstDisplayedWeek.setDate(firstDayOfMonth.getDate() - offsetToMondayFirstWeek);
+
+    // Calculate how many weeks are fully or partially displayed for this month
+    let weeksCount = 0;
+    let currentDateIterator = new Date(startDateOfFirstDisplayedWeek);
+
+    // Loop until we pass the last day of the current month
+    // We count a "week" if it contains at least one day of the current month
+    // or is part of the sequence of weeks that covers the month.
+    // The previous logic was based on a fixed number of weeks, now it's dynamic.
+    while (currentDateIterator.getMonth() < month || (currentDateIterator.getMonth() === month - 1 && currentDateIterator.getDate() <= lastDayOfMonth.getDate()) || (currentDateIterator.getMonth() === month && currentDateIterator.getDate() <= lastDayOfMonth.getDate())) {
+        weeksCount++;
+        currentDateIterator.setDate(currentDateIterator.getDate() + days.length); // Move to the start of the next week
+        if (weeksCount > 10) break; // Safety break to prevent infinite loops in edge cases
+    }
+
+    // A more robust way to calculate total weeks:
+    // Determine the start of the last displayed week.
+    // The last week is the one that contains the last day of the month.
+    const lastDayOfMonthDayOfWeek = lastDayOfMonth.getDay(); // 0 = Sunday, 1 = Monday
+    const offsetFromLastDayToLastMonday = (lastDayOfMonthDayOfWeek === 0) ? 6 : (lastDayOfMonthDayOfWeek - 1);
+    const startOfLastDisplayedWeek = new Date(lastDayOfMonth);
+    startOfLastDisplayedWeek.setDate(lastDayOfMonth.getDate() - offsetFromLastDayToLastMonday);
+
+
+    // Calculate total days from first displayed monday to last displayed monday
+    const diffTime = Math.abs(startOfLastDisplayedWeek.getTime() - startDateOfFirstDisplayedWeek.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    // Number of weeks is (total days + 1 for the start day) / days per week
+    let finalCalculatedWeeks = Math.ceil((diffDays + 1) / days.length);
+    // If start and end are in the same week, diffDays + 1 might be < 7, so it's 1 week.
+    if (finalCalculatedWeeks === 0 && (firstDayOfMonth.getMonth() === month -1 || lastDayOfMonth.getMonth() === month -1)) {
+      finalCalculatedWeeks = 1; // At least one week if there's any part of the month
+    }
+
+
+    // Ensure it's at least 1 and doesn't exceed 6 or 7 weeks (common maximum for a month's calendar display)
+    finalCalculatedWeeks = Math.max(1, finalCalculatedWeeks); // A month always has at least one week
+    // Cap at a reasonable max to prevent UI issues if calculation is slightly off for very long spans
+    finalCalculatedWeeks = Math.min(finalCalculatedWeeks, 6); // A calendar month usually spans max 6 weeks
+
+    setCalculatedNumberOfWeeks(finalCalculatedWeeks);
+
+
+    // Update weekDates for the currentWeek (same logic as before)
+    const dates = [];
+    const startOfWeek = new Date(startDateOfFirstDisplayedWeek);
+    startOfWeek.setDate(startDateOfFirstDisplayedWeek.getDate() + (currentWeek * days.length));
+
+    for (let i = 0; i < days.length; i++) {
+      const date = new Date(startOfWeek);
+      date.setDate(startOfWeek.getDate() + i);
+      dates.push(date);
+    }
+    setWeekDates(dates);
+
+    // Ensure currentWeek doesn't exceed the new calculated number of weeks
+    if (currentWeek >= finalCalculatedWeeks) {
+        setCurrentWeek(finalCalculatedWeeks > 0 ? finalCalculatedWeeks - 1 : 0);
+    }
+
+  }, [currentMonthYear, currentWeek]);
+
 
   // 🔁 Effect to load habits and checked state for the selected month/year
   useEffect(() => {
     const fetchData = async () => {
       if (!user) {
         console.warn("No user logged in. Cannot fetch data. Clearing local state.");
-        setHabits([]); // Clear habits if no user
-        setChecked([]); // Clear checked data if no user
+        setHabits([]);
+        setChecked([]);
         return;
       }
 
       try {
-        // Fetch user-specific habit list
         const habitsDocRef = doc(db, 'users', user.uid, 'habit-data', 'habitList');
         const habitsDocSnap = await getDoc(habitsDocRef);
         const fetchedHabits = habitsDocSnap.exists()
@@ -67,7 +140,6 @@ const HabitTracker = () => {
           : [];
         setHabits(fetchedHabits);
 
-        // Fetch user-specific monthly progress data
         const progressDocRef = doc(
           db,
           'users',
@@ -80,7 +152,6 @@ const HabitTracker = () => {
           ? progressDocSnap.data()
           : {};
 
-        // Map fetched habits to their checked states, initializing if missing
         const loadedCheckedState = fetchedHabits.map((_, habitIndex) =>
           progressData.checked?.[`habit_${habitIndex}`] ||
           Array(numberOfWeeks * days.length).fill(false)
@@ -93,18 +164,16 @@ const HabitTracker = () => {
     };
 
     fetchData();
-  }, [currentMonthYear, user, numberOfWeeks, days.length]); // Added numberOfWeeks and days.length as dependencies for full clarity
+  }, [currentMonthYear, user]);
 
   // ➕ Add new habit to Firebase and local state
   const addHabit = useCallback(async () => {
-    console.log("Attempting to add habit. newHabitName:", newHabitName, "user:", user);
     if (!newHabitName.trim()) {
       alert('Please enter a habit name.');
       return;
     }
     if (!user) {
       alert('Please log in to add habits.');
-      console.warn("addHabit: user is null, preventing habit addition.");
       return;
     }
 
@@ -119,7 +188,6 @@ const HabitTracker = () => {
         { merge: true }
       );
 
-      // Update local state after successful Firebase write
       setHabits((prevHabits) => [...prevHabits, newHabitName.trim()]);
       setChecked((prevChecked) => [
         ...prevChecked,
@@ -127,13 +195,11 @@ const HabitTracker = () => {
       ]);
 
       setNewHabitName('');
-      alert(`Habit "${newHabitName.trim()}" added successfully!`);
-      console.log(`Habit "${newHabitName.trim()}" added to Firebase for user ${user.uid}`);
     } catch (err) {
       console.error('Error adding habit to Firebase:', err);
       alert('Failed to add habit. Please try again.');
     }
-  }, [newHabitName, user, numberOfWeeks, days.length]);
+  }, [newHabitName, user]);
 
   // ✅ Toggle checkbox for a specific habit and day
   const toggleCheckbox = useCallback((habitIndex, dayIndex) => {
@@ -148,7 +214,6 @@ const HabitTracker = () => {
 
   // 💾 Save current monthly progress to Firebase
   const saveDataToFirebase = useCallback(async () => {
-    console.log("Attempting to save data. user:", user);
     if (!user) {
       alert('Please log in to save data.');
       console.warn("saveDataToFirebase: user is null, preventing data save.");
@@ -170,8 +235,7 @@ const HabitTracker = () => {
         },
         { merge: true }
       );
-      alert('Progress saved successfully to Firebase!');
-      console.log(`Progress saved for user ${user.uid}, month ${currentMonthYear}`);
+      alert('Progress saved successfully!');
     } catch (e) {
       console.error('Error saving document to Firebase: ', e);
       alert('Failed to save data. Please try again.');
@@ -188,7 +252,6 @@ const HabitTracker = () => {
       ).padStart(2, '0')}`;
       setCurrentMonthYear(newMonthYear);
       setCurrentWeek(0); // Reset to Week 1 (index 0) when changing months
-      console.log("Month changed to:", newMonthYear);
     },
     [currentMonthYear]
   );
@@ -247,7 +310,15 @@ const HabitTracker = () => {
           </button>
         </form>
 
-        {/* Habit Table Component */}
+        {/* Weekly Progress Component - Pass weekDates */}
+        <WeeklyProgress
+          checked={checked}
+          currentWeek={currentWeek}
+          days={days}
+          weekDates={weekDates} // NEW PROP
+        />
+
+        {/* Habit Table Component - Pass weekDates */}
        <HabitTable
           habits={habits}
           checked={checked}
@@ -257,7 +328,8 @@ const HabitTracker = () => {
           setChecked={setChecked}
           days={days}
           numberOfWeeks={numberOfWeeks}
-          user={user} // Passed user to HabitTable
+          user={user}
+          weekDates={weekDates} // NEW PROP
         />
 
         {/* Save Progress Button */}
@@ -265,18 +337,12 @@ const HabitTracker = () => {
           Save Progress
         </button>
 
-        {/* Week Controls Component */}
+        {/* Week Controls Component - Pass calculatedNumberOfWeeks */}
         <WeekControls
           currentWeek={currentWeek}
           setCurrentWeek={setCurrentWeek}
-          numberOfWeeks={numberOfWeeks}
-        />
-
-        {/* Weekly Progress Component */}
-        <WeeklyProgress
-          checked={checked}
-          currentWeek={currentWeek}
-          days={days}
+          calculatedNumberOfWeeks={calculatedNumberOfWeeks} // NEW PROP
+          monthLabel={monthLabel}
         />
 
         {/* Monthly Summary Component */}

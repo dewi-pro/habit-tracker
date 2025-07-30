@@ -141,19 +141,6 @@ const MonthlySummary = ({ habits, checked, days, numberOfWeeks }) => {
       <div className="overall-monthly-chart-container">
         <Doughnut data={chartData} options={chartOptions} />
       </div>
-      {/* <div className="summary-list-below-chart">
-        {habits.map((habitName, i) => {
-          const habitCheckedRow = checked[i];
-          const completedCount = habitCheckedRow ? habitCheckedRow.filter(Boolean).length : 0;
-          const percentageOfTotalDays = totalDaysInMonth > 0 ? Math.round((completedCount / totalDaysInMonth) * 100) : 0;
-          return (
-            <div key={`monthly-detail-${i}`} className="habit-detail-item">
-              <span className="habit-detail-name">{habitName}:</span>
-              <span className="habit-detail-percentage">{completedCount} / {totalDaysInMonth} days ({percentageOfTotalDays}%)</span>
-            </div>
-          );
-        })}
-      </div> */}
     </div>
   );
 };
