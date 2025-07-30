@@ -1,6 +1,12 @@
 import { getAnalytics } from 'firebase/analytics';
 // src/firebase.js
 import { initializeApp } from 'firebase/app';
+import {
+  browserLocalPersistence,
+  getAuth,
+  setPersistence,
+} from 'firebase/auth';
+import { GoogleAuthProvider } from 'firebase/auth/web-extension';
 import { getFirestore } from 'firebase/firestore';
 
 // Your web app's Firebase configuration
@@ -20,4 +26,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 
-export const db = getFirestore(app);
+const auth = getAuth(app);
+
+// ✅ This ensures the login stays across refreshes
+setPersistence(auth, browserLocalPersistence).catch((err) => {
+  console.error('Error setting auth persistence:', err);
+});
+
+const db = getFirestore(app);
+const googleProvider = new GoogleAuthProvider();
+
+export { auth, db, googleProvider };
