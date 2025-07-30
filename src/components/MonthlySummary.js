@@ -16,8 +16,6 @@ const MonthlySummary = ({ habits, checked, days, numberOfWeeks }) => {
     return null;
   }
 
-  const totalDaysInMonth = numberOfWeeks * days.length;
-
   const habitDataForChart = [];
   const backgroundColors = [];
   const borderColors = [];
