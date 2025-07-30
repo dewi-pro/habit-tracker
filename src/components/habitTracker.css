@@ -442,7 +442,44 @@ body {
   border-radius: 10px;
   transition: width 0.5s ease-out; /* Smooth transition for progress */
 }
+/* Add these styles to your existing habitTracker.css */
 
+/* --- NEW: Edit Habit Styles --- */
+.habit-name-cell.edit-mode {
+  padding: 0; /* Remove padding from cell to allow input to fill */
+}
+
+.edit-habit-input {
+  width: 100%;
+  padding: 10px 8px; /* Slightly less padding than table cell */
+  border: 1px solid var(--primary-color);
+  border-radius: 6px;
+  font-size: 0.95rem; /* Match font size of habit name */
+  color: var(--text-dark);
+  box-sizing: border-box; /* Include padding/border in width */
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.edit-habit-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+}
+
+.action-icon-btn.save {
+  color: var(--success-color);
+}
+
+.action-icon-btn.save:hover {
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.action-icon-btn.cancel {
+  color: var(--danger-color);
+}
+
+.action-icon-btn.cancel:hover {
+  background-color: rgba(239, 83, 80, 0.1);
+}
 /* ------------------------------------------- */
 /* Media Queries for Responsiveness */
 /* ------------------------------------------- */
