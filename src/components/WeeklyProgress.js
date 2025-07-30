@@ -1,22 +1,34 @@
 import React from 'react';
 
 import { days } from '../data/Habits';
-import pots from './pots';
+import pots from './pots'; // Keep this import now
 
 const WeeklyProgress = ({ checked, currentWeek }) => {
+  // Helper to get daily progress percentage
   const getDayProgress = (dayIndex) => {
-    const index = currentWeek * 7 + dayIndex;
-    let completed = 0;
+    // Calculate the global index for the specific day in the checked array
+    const globalDayIndex = currentWeek * days.length + dayIndex;
+    let completedCount = 0;
 
+    // Iterate through each habit row to count completions for this specific day
     checked.forEach(habitRow => {
-      if (habitRow[index]) completed++;
+      // Ensure habitRow and its index exist before checking
+      if (habitRow && habitRow[globalDayIndex]) {
+        completedCount++;
+      }
     });
 
-    const total = checked.length || 1; // avoid division by 0
-    return Math.round((completed / total) * 100);
+    const totalHabits = checked.length;
+    // Avoid division by zero if no habits are added
+    if (totalHabits === 0) {
+      return 0;
+    }
+
+    return Math.round((completedCount / totalHabits) * 100);
   };
 
-  const getStage = (percent) => {
+  // Helper to map percentage to a string stage key for the `pots` object
+  const getStageKey = (percent) => {
     if (percent >= 75) return "bloom";
     if (percent >= 50) return "growing";
     if (percent >= 25) return "sprout";
@@ -24,17 +36,22 @@ const WeeklyProgress = ({ checked, currentWeek }) => {
   };
 
   return (
-    <div style={{ marginTop: 40 }}>
-      <h2>Week {currentWeek + 1} Progress</h2>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 20, flexWrap: 'wrap' }}>
+    <div className="weekly-progress-section">
+      <h2 className="section-title">Week {currentWeek + 1} Progress</h2>
+      <div className="progress-grid">
         {days.map((dayName, dayIdx) => {
           const percent = getDayProgress(dayIdx);
-          const stage = getStage(percent);
+          const stageKey = getStageKey(percent); // Get string key for `pots` object
+
           return (
-            <div key={dayName} style={{ textAlign: 'center' }}>
-              <strong>{dayName}</strong>
-              <div style={{ marginTop: 10 }}>{pots[stage]}</div>
-              <div>{percent}%</div>
+            <div key={`day-progress-${dayIdx}`} className="daily-progress-card">
+              <span className="day-label">{dayName}</span>
+              <div className="plant-container">
+                {/* Render the SVG directly from the pots object */}
+                {/* The `pot` class will now be styled on the parent `plant-container` or directly on the SVG/rects */}
+                {pots[stageKey]}
+              </div>
+              <span className="percentage">{percent}%</span>
             </div>
           );
         })}

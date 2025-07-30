@@ -1,73 +1,545 @@
+/* habitTracker.css */
 
-.App {
-  font-family: Arial, sans-serif;
-  padding: 2rem;
-  overflow-x: auto;
+/* Basic Resets & Font Imports (if using Google Fonts) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+:root {
+  --primary-color: #4CAF50; /* A friendly green */
+  --primary-light: #81C784;
+  --secondary-color: #2196F3; /* A calming blue for secondary elements if needed */
+  --text-dark: #333333;
+  --text-medium: #666666;
+  --text-light: #999999;
+  --bg-light: #F9F9F9;
+  --bg-white: #FFFFFF;
+  --border-light: #E0E0E0;
+  --success-color: #4CAF50;
+  --danger-color: #EF5350;
+  --shadow-light: rgba(0, 0, 0, 0.05);
+  --shadow-medium: rgba(0, 0, 0, 0.1);
 }
 
-table {
-  border-collapse: collapse;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  line-height: 1.6;
+}
+
+/* ------------------------------------------- */
+/* General Layout & Container */
+/* ------------------------------------------- */
+.habit-tracker-container {
+  max-width: 1200px;
+  margin: 20px auto; /* Centered with some top/bottom margin */
+  padding: 20px;
+  background-color: var(--bg-white);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px var(--shadow-medium);
+}
+
+/* ------------------------------------------- */
+/* Header */
+/* ------------------------------------------- */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.user-info {
+  font-size: 0.95rem;
+  color: var(--text-medium);
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: var(--text-medium);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 5px 10px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.logout-btn:hover {
+  background-color: var(--border-light);
+  color: var(--text-dark);
+}
+
+/* ------------------------------------------- */
+/* Main Content Sections */
+/* ------------------------------------------- */
+.main-content {
+  padding: 0 10px; /* Some horizontal padding for content */
+}
+
+.section-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+/* ------------------------------------------- */
+/* Month Navigation */
+/* ------------------------------------------- */
+.month-navigation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.current-month-label {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+/* ------------------------------------------- */
+/* Buttons - General Styles */
+/* ------------------------------------------- */
+.nav-button,
+.add-habit-btn,
+.save-progress-btn {
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+/* Primary Button Style */
+.add-habit-btn,
+.save-progress-btn {
+  background-color: var(--primary-color);
+  color: var(--bg-white);
+  box-shadow: 0 2px 8px var(--shadow-light);
+}
+
+.add-habit-btn:hover,
+.save-progress-btn:hover {
+  /* You can't use darken() in plain CSS, so use a fixed darker hex */
+  background-color: #388E3C; /* A slightly darker green */
+  box-shadow: 0 4px 12px var(--shadow-medium);
+}
+
+/* Navigation Button Style (outlined/secondary) */
+.nav-button {
+  background-color: var(--bg-white);
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+}
+
+.nav-button:hover {
+  background-color: var(--primary-color);
+  color: var(--bg-white);
+}
+
+/* ------------------------------------------- */
+/* Add New Habit Form */
+/* ------------------------------------------- */
+.add-habit-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+  justify-content: center;
+}
+
+.add-habit-input {
+  flex-grow: 1; /* Allows input to take available space */
+  max-width: 400px; /* Limit max width for aesthetic */
+  padding: 12px 15px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  font-size: 1rem;
+  color: var(--text-dark);
+}
+
+.add-habit-input::placeholder {
+  color: var(--text-light);
+}
+
+.add-habit-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+}
+
+/* ------------------------------------------- */
+/* Habit Table */
+/* ------------------------------------------- */
+.habit-table-container {
+  overflow-x: auto; /* Allows horizontal scrolling on small screens */
+  margin-bottom: 30px;
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px var(--shadow-light);
+}
+
+.habit-table {
   width: 100%;
+  border-collapse: collapse; /* Remove default table borders */
 }
 
-th, td {
-  border: 1px solid #a2c08f;
-  padding: 8px;
+.habit-table th,
+.habit-table td {
+  padding: 12px 8px;
   text-align: center;
-  white-space: nowrap;
-}
-.progress-visual {
-  text-align: center;
-  margin-top: 30px;
+  border: 1px solid var(--border-light); /* Finer grid lines */
+  white-space: nowrap; /* Prevent day headers from wrapping */
 }
 
-.progress-visual img {
-  max-width: 100%;
-  height: auto;
-  transition: transform 0.3s ease;
+.habit-table th {
+  background-color: var(--primary-light);
+  color: var(--bg-white);
+  font-weight: 600;
+  position: sticky; /* Sticky header for long tables */
+  top: 0;
+  z-index: 10;
 }
 
-
-th {
-  background-color: #b7d7a8;
+.habit-table tr:nth-child(even) {
+  background-color: var(--bg-light); /* Zebra striping */
 }
 
-input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
+.habit-table tr:hover {
+  background-color: rgba(76, 175, 80, 0.05); /* Subtle hover effect */
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.habit-name-cell {
+  text-align: left;
+  font-weight: 500;
+  color: var(--text-dark);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* Custom Checkbox Styling */
+.custom-checkbox {
+  appearance: none; /* Hide default checkbox */
+  -webkit-appearance: none;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--primary-color);
+  border-radius: 4px;
+  background-color: var(--bg-white);
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.custom-checkbox:checked {
+  background-color: var(--success-color);
+  border-color: var(--success-color);
+}
+
+.custom-checkbox:checked::after {
+  content: '✓'; /* Checkmark symbol */
+  font-size: 16px;
+  color: var(--bg-white);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.custom-checkbox:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3);
+}
+
+/* Action Icons (Edit/Delete) */
+.action-icons-cell {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.action-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  font-size: 1.1rem;
+  color: var(--text-medium);
+  transition: color 0.2s ease;
+}
+
+.action-icon-btn.edit:hover {
+  color: var(--secondary-color);
+}
+
+.action-icon-btn.delete:hover {
+  color: var(--danger-color);
+}
+
+/* ------------------------------------------- */
+/* Week Controls (already styled by .nav-button) */
+/* ------------------------------------------- */
+.week-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-top: 20px;
+  margin-bottom: 40px;
+}
+
+.week-indicator {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-dark);
+}
+
+/* ------------------------------------------- */
+/* Weekly Progress (Plant Visuals) - UPDATED FOR INLINE SVGS */
+/* ------------------------------------------- */
+.weekly-progress-section {
+  margin-top: 40px;
+  padding: 20px;
+  background-color: var(--bg-white);
+  border-radius: 12px;
+  box-shadow: 0 2px 10px var(--shadow-light);
+  margin-bottom: 40px;
+}
+
+.weekly-progress-section .section-title { /* Target the H2 specifically within this section */
+  margin-bottom: 25px; /* Ensure consistent spacing for section title */
+}
+
+.progress-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Responsive grid */
+  gap: 20px;
+  justify-items: center;
+  align-items: end; /* Align cards to the bottom (helpful if cards have different heights initially) */
+}
+
+.daily-progress-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: var(--bg-light);
+  width: 100%; /* Ensure cards take full grid column width */
+  min-height: 180px; /* Ensure consistent height for visual alignment of cards */
+  justify-content: flex-end; /* Push content (plant + percentage) to bottom of card */
+  position: relative; /* For general positioning context */
+  box-shadow: 0 1px 5px var(--shadow-light); /* Subtle shadow for cards */
 }
 
-.App-link {
-  color: #61dafb;
+.daily-progress-card .day-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 10px; /* Space between day label and plant container */
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+.plant-container {
+  width: 100%; /* Container for the SVG to allow it to scale */
+  height: 100px; /* Fixed height for the plant drawing area */
+  display: flex;
+  justify-content: center; /* Center the SVG horizontally */
+  align-items: flex-end; /* Align the SVG to the bottom of the container */
+  position: relative;
+  overflow: hidden; /* Hide any overflow of the SVG content */
+}
+
+.plant-container svg { /* Target the SVG element directly inside plant-container */
+  max-width: 100%;
+  max-height: 100%;
+  display: block; /* Remove extra space below inline elements */
+  /* Remove width/height attributes from the SVG element itself in pots.js
+     if you want CSS to control its size completely via parent, or ensure
+     the viewBox is set correctly. The current viewBox="0 0 64 64" is good.*/
+  height: auto; /* Allow height to scale proportionally with width */
+  /* If you want transitions on SVG properties (like fill or transform), add them here */
+}
+
+/* Removed old .pot, .plant-stem, .plant-growth, and .plant-growth[data-progress] rules */
+/* as they are no longer relevant for inline SVGs from pots.js */
+
+.daily-progress-card .percentage {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-top: 15px; /* Space between plant and percentage */
+  /* z-index and position are generally not needed here if layout is flex/grid based */
+}
+
+
+/* ------------------------------------------- */
+/* Monthly Summary */
+/* ------------------------------------------- */
+.monthly-summary-section {
+  margin-top: 40px;
+  padding: 20px;
+  background-color: var(--bg-white);
+  border-radius: 12px;
+  box-shadow: 0 2px 10px var(--shadow-light);
+}
+
+.monthly-summary-section .section-title { /* Target the H2 specifically within this section */
+  margin-bottom: 25px; /* Ensure consistent spacing for section title */
+}
+
+.summary-list { /* A container for the list of summary items */
+  /* If you want a specific layout (e.g., two columns on desktop) for summary items: */
+  /* display: grid; */
+  /* grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); */
+  /* gap: 20px; */
+}
+
+.summary-item {
+  margin-bottom: 20px;
+}
+
+.summary-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.habit-name-summary {
+  font-weight: 600;
+  color: var(--text-dark);
+  font-size: 1.05rem;
+}
+
+.summary-percentage {
+  font-weight: 700;
+  color: var(--primary-color);
+  font-size: 1.1rem;
+}
+
+.progress-bar-container {
+  width: 100%;
+  background-color: var(--border-light);
+  border-radius: 10px;
+  height: 12px;
+  overflow: hidden; /* Ensures the fill stays within bounds */
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: var(--success-color); /* Green for progress */
+  border-radius: 10px;
+  transition: width 0.5s ease-out; /* Smooth transition for progress */
+}
+
+/* ------------------------------------------- */
+/* Media Queries for Responsiveness */
+/* ------------------------------------------- */
+@media (max-width: 768px) {
+  .habit-tracker-container {
+    margin: 10px;
+    padding: 15px;
+    border-radius: 8px;
   }
-  to {
-    transform: rotate(360deg);
+
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .logout-btn {
+    align-self: flex-end; /* Push logout to the right */
+  }
+
+  .section-title {
+    font-size: 1.7rem;
+    margin-bottom: 20px;
+  }
+
+  .month-navigation,
+  .add-habit-form {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .add-habit-input {
+    width: 100%;
+    max-width: none;
+  }
+
+  .nav-button,
+  .add-habit-btn,
+  .save-progress-btn {
+    width: 100%;
+    padding: 12px 15px;
+  }
+
+  .habit-table th,
+  .habit-table td {
+    padding: 10px 5px;
+    font-size: 0.9rem;
+  }
+
+  /* Adjust grid for smaller screens */
+  .progress-grid {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 15px;
+  }
+
+  .daily-progress-card {
+    min-height: 150px;
+  }
+
+  /*
+   * Removed .pot and .plant-growth specific media queries here
+   * as the SVG itself now contains the plant/pot and scales proportionally.
+   * If you need to resize the SVG, target .plant-container svg.
+   */
+  .plant-container {
+    height: 80px; /* Adjust height for smaller screens if needed */
+  }
+
+  .daily-progress-card .percentage {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-title {
+    font-size: 1.5rem;
+  }
+
+  .habit-table th,
+  .habit-table td {
+    font-size: 0.8rem;
+    /* Consider even smaller padding or allowing some wrapping for day names */
+  }
+
+  /* Stack navigation buttons for very small screens */
+  .month-navigation,
+  .week-controls {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .current-month-label, .week-indicator {
+    order: -1; /* Place label on top */
+  }
+
+  .progress-grid {
+    grid-template-columns: 1fr 1fr; /* Two columns for very small screens */
   }
 }
