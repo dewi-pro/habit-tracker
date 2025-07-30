@@ -22,16 +22,10 @@ const PrivateRoute = ({ children }) => {
 };
 
 const AppRoutes = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   return (
     <Router>
-      {user && (
-        <nav>
-          <span>Hi, {user.email}</span>
-          <button onClick={logout}>Logout</button>
-        </nav>
-      )}
       <Routes>
         <Route path="/" element={user ? <Navigate to="/tracker" /> : <Login />} />
         <Route path="/tracker" element={<PrivateRoute><HabitTracker /></PrivateRoute>} />

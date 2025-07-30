@@ -13,6 +13,7 @@ import {
   setDoc,
 } from 'firebase/firestore'; // Grouped Firebase imports
 
+import { useAuth } from '../context/AuthContext';
 import {
   days,
   numberOfWeeks,
@@ -38,7 +39,7 @@ const HabitTracker = () => {
     const month = String(today.getMonth() + 1).padStart(2, '0');
     return `${year}_${month}`;
   });
-
+const {logout } = useAuth();
   // Derived state for display
   const monthLabel = new Date(
     parseInt(currentMonthYear.split('_')[0]), // Year
@@ -177,7 +178,7 @@ const HabitTracker = () => {
       {/* Header Section */}
       <header className="app-header">
         <span className="user-info">Hi, udaichi02@gmail.com</span>
-        <button className="logout-btn">Logout</button>
+        <button className="logout-btn" onClick={logout}>Logout</button>
       </header>
 
       {/* Main Content Area */}
