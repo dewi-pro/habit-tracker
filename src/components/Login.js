@@ -48,7 +48,7 @@ const Login = () => {
       {/* Background abstract shapes/decorations */}
       {/* Using an img tag for the abstract shape, ensure path is correct */}
       <img src="/abstract-shape.svg" alt="Abstract background shape" className="abstract-shape top-left" />
-      <img src="/abstract-shape-2.svg" alt="Abstract background shape" className="abstract-shape bottom-right" />
+      <img src="/abstract-shape.svg" alt="Abstract background shape" className="abstract-shape bottom-right" />
 
 
       <form className="login-card" onSubmit={handleSubmit}>
@@ -92,15 +92,14 @@ const Login = () => {
             Sign In {/* Text for the main login button */}
           </button>
 
-          <div className="separator">
+          {/* <div className="separator">
             <span>OR</span>
           </div>
 
           <button type="button" className="btn-google" onClick={handleGoogleLogin}>
-            {/* Ensure google-icon.svg is in your public directory or accessible path */}
             <img src="/google-icon.svg" alt="Google logo" className="google-icon" />
             Continue with Google
-          </button>
+          </button> */}
         </div>
 
         {/* Optional: Add a link for "Don't have an account?" at the bottom if registration is separate */}

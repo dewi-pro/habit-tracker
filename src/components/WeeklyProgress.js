@@ -3,7 +3,8 @@ import React from 'react';
 import { days } from '../data/Habits';
 import pots from './pots'; // Correct import for your pots object
 
-const WeeklyProgress = ({ checked, currentWeek, weekDates }) => {
+// Accept progressGridRef as a prop
+const WeeklyProgress = ({ checked, currentWeek, weekDates, progressGridRef }) => {
 
   const firstDayOfWeekIndex = currentWeek * days.length;
 
@@ -56,7 +57,8 @@ const WeeklyProgress = ({ checked, currentWeek, weekDates }) => {
   return (
     <div className="weekly-progress-section">
       <h2 className="section-title">Week {currentWeek + 1} Progress</h2>
-      <div className="progress-grid">
+      {/* Attach the progressGridRef to the .progress-grid div */}
+      <div className="progress-grid" ref={progressGridRef}>
         {weekDates.map((date, dayOfWeekIndex) => {
           const globalDayIndex = firstDayOfWeekIndex + dayOfWeekIndex;
           const percentage = calculateDailyPercentage(globalDayIndex);

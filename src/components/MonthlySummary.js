@@ -1,4 +1,9 @@
-import React from 'react';
+// MonthlySummary.js (No change from the previous version for legend position logic)
+
+import React, {
+  useEffect,
+  useState,
+} from 'react';
 
 import {
   ArcElement,
@@ -8,10 +13,27 @@ import {
 } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 
-// No longer importing ChartDataLabels, so remove it from the register call
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const MonthlySummary = ({ habits, checked, days, numberOfWeeks }) => {
+  const [legendPosition, setLegendPosition] = useState('right');
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        setLegendPosition('bottom'); // Legend will be at the bottom on mobile
+      } else {
+        setLegendPosition('right');
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   if (!habits.length || !checked.length) {
     return null;
   }
@@ -42,10 +64,10 @@ const MonthlySummary = ({ habits, checked, days, numberOfWeeks }) => {
     const habitCheckedRow = checked[i];
     if (habitCheckedRow) {
       const completedCount = habitCheckedRow.filter(Boolean).length;
-      if (completedCount > 0) { // Only add slices for habits that have at least 1 completion
+      if (completedCount > 0) {
         habitDataForChart.push({
           label: habitName,
-          value: completedCount, // The value for the slice is the count of completions
+          value: completedCount,
         });
         backgroundColors.push(colorPalette[colorIndex % colorPalette.length]);
         borderColors.push(colorPalette[colorIndex % colorPalette.length]);
@@ -58,9 +80,9 @@ const MonthlySummary = ({ habits, checked, days, numberOfWeeks }) => {
   if (totalCompletedAcrossAllHabits === 0) {
       habitDataForChart.push({
           label: 'No Habits Completed Yet',
-          value: 1, // A single slice representing 100% of 'nothing'
+          value: 1,
       });
-      backgroundColors.push('#D3D3D3'); // Grey color
+      backgroundColors.push('#D3D3D3');
       borderColors.push('#D3D3D3');
   }
 
@@ -68,7 +90,7 @@ const MonthlySummary = ({ habits, checked, days, numberOfWeeks }) => {
     labels: habitDataForChart.map(data => data.label),
     datasets: [
       {
-        data: habitDataForChart.map(data => data.value), // Values are completion counts
+        data: habitDataForChart.map(data => data.value),
         backgroundColor: backgroundColors,
         borderColor: borderColors,
         borderWidth: 1,
@@ -83,28 +105,31 @@ const MonthlySummary = ({ habits, checked, days, numberOfWeeks }) => {
     plugins: {
       legend: {
         display: true,
-        position: 'right',
+        position: legendPosition, // Uses 'bottom' on mobile, 'right' on desktop
         labels: {
           color: '#333',
           font: {
             size: 14
           },
-          // Custom label generation to include percentage beside the text
+          // Use a function for 'align' to conditionally set it
+          // This ensures the legend items themselves are aligned left
+          align: (chart) => {
+            return chart.options.plugins.legend.position === 'bottom' ? 'start' : 'center';
+          },
           generateLabels: function(chart) {
             const data = chart.data;
             if (data.labels.length && data.datasets.length) {
-              const total = data.datasets[0].data.reduce((sum, val) => sum + val, 0); // Sum of all completed counts
+              const total = data.datasets[0].data.reduce((sum, val) => sum + val, 0);
               return data.labels.map(function(label, i) {
                 const value = data.datasets[0].data[i];
                 const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
 
                 return {
-                  text: `${label} ${percentage}%`, // Combine label with percentage
+                  text: `${label} ${percentage}%`,
                   fillStyle: data.datasets[0].backgroundColor[i],
                   strokeStyle: data.datasets[0].borderColor[i],
                   lineWidth: 1,
                   hidden: !chart.isDatasetVisible(0) || chart.getDatasetMeta(0).data[i].hidden,
-                  // Extra data for custom events
                   index: i
                 };
               });
@@ -114,11 +139,11 @@ const MonthlySummary = ({ habits, checked, days, numberOfWeeks }) => {
         }
       },
       tooltip: {
-        enabled: true, // Keep tooltips for detailed info on hover
+        enabled: true,
         callbacks: {
           label: function(context) {
             const label = context.label || '';
-            const value = context.parsed; // This is the 'completedCount' for the slice
+            const value = context.parsed;
             let percentageOfPie = 0;
             if (totalCompletedAcrossAllHabits > 0) {
               percentageOfPie = ((value / totalCompletedAcrossAllHabits) * 100).toFixed(1);
@@ -127,7 +152,6 @@ const MonthlySummary = ({ habits, checked, days, numberOfWeeks }) => {
           }
         }
       },
-      // Remove datalabels plugin configuration from here
     },
     animation: {
       duration: 1000,

@@ -3,6 +3,7 @@ import './habitTracker.css';
 import React, {
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 
@@ -39,6 +40,10 @@ const HabitTracker = () => {
   });
   const [calculatedNumberOfWeeks, setCalculatedNumberOfWeeks] = useState(0); // NEW STATE
   const { user, logout } = useAuth();
+
+  // Refs for scroll synchronization
+  const progressGridRef = useRef(null);
+  const habitTableContainerRef = useRef(null);
 
   const monthLabel = new Date(
     parseInt(currentMonthYear.split('_')[0]),
@@ -256,6 +261,49 @@ const HabitTracker = () => {
     [currentMonthYear]
   );
 
+  // --- NEW: Scroll Synchronization Logic ---
+useEffect(() => {
+    const progressGridElement = progressGridRef.current;
+    const habitTableContainerElement = habitTableContainerRef.current;
+
+    const syncScroll = (scrollingElement, targetElement) => {
+        if (scrollingElement && targetElement) {
+            targetElement.scrollLeft = scrollingElement.scrollLeft;
+        }
+    };
+
+    let isScrollingProgrammatically = false;
+
+    const handleProgressScroll = () => {
+        if (!isScrollingProgrammatically) {
+            isScrollingProgrammatically = true;
+            requestAnimationFrame(() => {
+                syncScroll(progressGridElement, habitTableContainerElement);
+                isScrollingProgrammatically = false;
+            });
+        }
+    };
+
+    const handleTableScroll = () => {
+        if (!isScrollingProgrammatically) {
+            isScrollingProgrammatically = true;
+            requestAnimationFrame(() => {
+                syncScroll(habitTableContainerElement, progressGridElement);
+                isScrollingProgrammatically = false;
+            });
+        }
+    };
+
+    if (progressGridElement && habitTableContainerElement) {
+        progressGridElement.addEventListener('scroll', handleProgressScroll);
+        habitTableContainerElement.addEventListener('scroll', handleTableScroll);
+
+        return () => {
+            progressGridElement.removeEventListener('scroll', handleProgressScroll);
+            habitTableContainerElement.removeEventListener('scroll', handleTableScroll);
+        };
+    }
+}, []);
   return (
     <div className="habit-tracker-container">
       {/* Header Section */}
@@ -310,15 +358,16 @@ const HabitTracker = () => {
           </button>
         </form>
 
-        {/* Weekly Progress Component - Pass weekDates */}
+        {/* Weekly Progress Component - Pass weekDates and ref */}
         <WeeklyProgress
           checked={checked}
           currentWeek={currentWeek}
           days={days}
-          weekDates={weekDates} // NEW PROP
+          weekDates={weekDates}
+          progressGridRef={progressGridRef}
         />
 
-        {/* Habit Table Component - Pass weekDates */}
+        {/* Habit Table Component - Pass weekDates and ref */}
        <HabitTable
           habits={habits}
           checked={checked}
@@ -329,7 +378,8 @@ const HabitTracker = () => {
           days={days}
           numberOfWeeks={numberOfWeeks}
           user={user}
-          weekDates={weekDates} // NEW PROP
+          weekDates={weekDates}
+          habitTableContainerRef={habitTableContainerRef}
         />
 
         {/* Save Progress Button */}
@@ -341,7 +391,7 @@ const HabitTracker = () => {
         <WeekControls
           currentWeek={currentWeek}
           setCurrentWeek={setCurrentWeek}
-          calculatedNumberOfWeeks={calculatedNumberOfWeeks} // NEW PROP
+          calculatedNumberOfWeeks={calculatedNumberOfWeeks}
           monthLabel={monthLabel}
         />
 

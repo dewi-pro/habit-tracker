@@ -134,7 +134,6 @@ body {
 
 .add-habit-btn:hover,
 .save-progress-btn:hover {
-  /* You can't use darken() in plain CSS, so use a fixed darker hex */
   background-color: #388E3C; /* A slightly darker green */
   box-shadow: 0 4px 12px var(--shadow-medium);
 }
@@ -186,6 +185,7 @@ body {
 /* ------------------------------------------- */
 .habit-table-container {
   overflow-x: auto; /* Allows horizontal scrolling on small screens */
+  -webkit-overflow-scrolling: touch; /* Improves scrolling performance on iOS */
   margin-bottom: 30px;
   border: 1px solid var(--border-light);
   border-radius: 10px;
@@ -287,6 +287,14 @@ body {
   color: var(--danger-color);
 }
 
+/* Adjust the width of the day columns in the table to match pots */
+.habit-table th:nth-child(n+3), /* Targets all <th> after the first two ("Daily Habits", "Completed") */
+.habit-table td:nth-child(n+3) { /* Targets all <td> after the first two (habit name, completed count) */
+  min-width: 110px; /* Default min-width for days on larger screens */
+  width: 110px; /* Fixed width to align with daily-progress-card. Fine-tune if needed. */
+}
+
+
 /* ------------------------------------------- */
 /* Week Controls (already styled by .nav-button) */
 /* ------------------------------------------- */
@@ -322,11 +330,23 @@ body {
 }
 
 .progress-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Responsive grid */
-  gap: 20px;
-  justify-items: center;
-  align-items: end; /* Align cards to the bottom (helpful if cards have different heights initially) */
+  display: flex; /* Changed from grid to flex for horizontal scrolling */
+  overflow-x: auto; /* Enables horizontal scrolling */
+  -webkit-overflow-scrolling: touch; /* Improves scrolling performance on iOS */
+  gap: 15px; /* Space between cards */
+  padding-bottom: 10px; /* Add some padding if scrollbar is at the very bottom */
+  justify-content: flex-start; /* Align items to the start for better scrolling on mobile */
+  align-items: flex-end; /* Align cards to the bottom (helpful if cards have different heights initially) */
+}
+
+/* Optional: Hide scrollbar for a cleaner look (but still allow scrolling) */
+.progress-grid::-webkit-scrollbar {
+  display: none; /* For Chrome, Safari, and Opera */
+}
+
+.progress-grid {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
 
 .daily-progress-card {
@@ -336,7 +356,9 @@ body {
   padding: 15px;
   border-radius: 8px;
   background-color: var(--bg-light);
-  width: 100%; /* Ensure cards take full grid column width */
+  /* CRITICAL CHANGE: Be very explicit with flex-shrink and width */
+  flex: 0 0 120px; /* Do not grow (0), do not shrink (0), base width 120px */
+                 /* This ensures each card takes exactly 120px + gap */
   min-height: 180px; /* Ensure consistent height for visual alignment of cards */
   justify-content: flex-end; /* Push content (plant + percentage) to bottom of card */
   position: relative; /* For general positioning context */
@@ -364,22 +386,14 @@ body {
   max-width: 100%;
   max-height: 100%;
   display: block; /* Remove extra space below inline elements */
-  /* Remove width/height attributes from the SVG element itself in pots.js
-     if you want CSS to control its size completely via parent, or ensure
-     the viewBox is set correctly. The current viewBox="0 0 64 64" is good.*/
   height: auto; /* Allow height to scale proportionally with width */
-  /* If you want transitions on SVG properties (like fill or transform), add them here */
 }
-
-/* Removed old .pot, .plant-stem, .plant-growth, and .plant-growth[data-progress] rules */
-/* as they are no longer relevant for inline SVGs from pots.js */
 
 .daily-progress-card .percentage {
   font-size: 1.2rem;
   font-weight: 700;
   color: var(--primary-color);
   margin-top: 15px; /* Space between plant and percentage */
-  /* z-index and position are generally not needed here if layout is flex/grid based */
 }
 
 
@@ -435,7 +449,6 @@ body {
   border-radius: 10px;
   transition: width 0.5s ease-out; /* Smooth transition for progress */
 }
-/* Add these styles to your existing habitTracker.css */
 
 /* --- NEW: Edit Habit Styles --- */
 .habit-name-cell.edit-mode {
@@ -473,44 +486,36 @@ body {
 .action-icon-btn.cancel:hover {
   background-color: rgba(239, 83, 80, 0.1);
 }
-/* In your CSS file (e.g., App.css, or a dedicated MonthlySummary.css) */
 
+
+/* Monthly Summary Chart container and base styles */
 .overall-monthly-chart-container {
-  /* Increase the width to provide more space for the legend */
-  width: 450px; /* You might need to experiment with this value */
-  height: 300px; /* Keep height consistent, or adjust as needed */
-  margin: 20px auto; /* Center the chart horizontally */
+  /* Default width for larger screens when legend is on the right */
+  width: 450px;
+  height: 300px;
+  margin: 20px auto;
   position: relative;
-  /* Add display: flex to utilize space better for legend positioning */
+  /* On desktop, keep flex for centering chart and legend together if needed */
   display: flex;
-  justify-content: center; /* Center the chart itself */
-  align-items: center; /* Center vertically */
+  justify-content: center;
+  align-items: center;
 }
 
 /* Ensure existing section and title styles are consistent */
 .monthly-summary-section {
   padding: 20px;
-  background-color: #f9f9f9;
+  background-color: var(--bg-white); /* Use variable for consistency */
   border-radius: 10px;
   margin-top: 30px;
   text-align: center; /* Center the title */
-  /* If the legend is still cut off, you might need to increase the min-width or width of this section too */
-  /* min-width: 500px; */
+  box-shadow: 0 2px 10px var(--shadow-light); /* Add shadow for consistency */
 }
 
 .section-title {
-  color: #4CAF50;
+  color: var(--primary-color); /* Use variable for consistency */
   margin-bottom: 25px;
   font-size: 1.8em;
 }
-
-/* Ensure the legend labels themselves are not too large if the container adjustment isn't enough */
-/* This specific styling is applied via chartOptions in JS, but keeping it here for reference */
-/*
-.chartjs-render-monitor {
-    // This is the canvas element, its parent .overall-monthly-chart-container controls its size
-}
-*/
 
 /* Styles for the optional detail list below the chart */
 .summary-list-below-chart {
@@ -539,25 +544,11 @@ body {
   color: #333;
 }
 .habit-detail-percentage {
-    color: #4CAF50; /* A nice green for percentages */
+    color: var(--success-color); /* Use variable for consistency */
 }
 
-/* Ensure existing section and title styles are consistent */
-.monthly-summary-section {
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 10px;
-  margin-top: 30px;
-  text-align: center; /* Center the title */
-}
-
-.section-title {
-  color: #4CAF50;
-  margin-bottom: 25px;
-  font-size: 1.8em;
-}
 /* ------------------------------------------- */
-/* Media Queries for Responsiveness */
+/* Media Queries for Responsiveness - REFINED */
 /* ------------------------------------------- */
 @media (max-width: 768px) {
   .habit-tracker-container {
@@ -606,39 +597,83 @@ body {
     font-size: 0.9rem;
   }
 
+  /* Adjust table column width for mobile to match the smaller pot size */
+  .habit-table th:nth-child(n+3),
+  .habit-table td:nth-child(n+3) {
+    min-width: 85px; /* Adjusted to be slightly smaller for better fit */
+    width: 85px; /* Adjusted to be slightly smaller for better fit */
+  }
+
   /* Adjust grid for smaller screens */
   .progress-grid {
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    gap: 15px;
+    gap: 8px; /* Slightly smaller gap on mobile */
+    padding-left: 5px; /* Add slight padding to the left to avoid being too close to edge */
+    padding-right: 5px; /* Add slight padding to the right */
   }
 
   .daily-progress-card {
-    min-height: 150px;
+    flex: 0 0 95px; /* Adjusted fixed width for mobile */
+    min-height: 140px; /* Slightly reduced height */
+    padding: 10px; /* Slightly less padding */
   }
 
-  /*
-   * Removed .pot and .plant-growth specific media queries here
-   * as the SVG itself now contains the plant/pot and scales proportionally.
-   * If you need to resize the SVG, target .plant-container svg.
-   */
   .plant-container {
-    height: 80px; /* Adjust height for smaller screens if needed */
+    height: 70px; /* Adjust height for smaller screens */
   }
 
   .daily-progress-card .percentage {
-    font-size: 1rem;
+    font-size: 0.9rem;
+  }
+
+  /* Monthly Summary Chart specific adjustments for 768px */
+  .overall-monthly-chart-container {
+    width: 100%; /* Take full width on smaller screens */
+    height: 250px; /* Adjust height for mobile */
+    /* When legend is at bottom, let Chart.js handle positioning within the canvas.
+       We change to display: block to ensure full width usage and proper flow for the legend below. */
+    display: block; /* Ensures it takes full width and allows content below */
+  }
+
+  /* Style for Chart.js legend when it's positioned at the bottom */
+  /* This targets the <ul> element that is immediately after the <canvas> element */
+  .overall-monthly-chart-container canvas + div ul {
+    text-align: left; /* Aligns the legend items (text) to the left */
+    padding-left: 15px; /* Add some padding from the left edge of the container */
+    padding-right: 15px; /* Add some padding from the right edge */
+    margin-top: 10px; /* Add some space between the chart and the legend */
+  }
+
+  /* Further fine-tuning for individual legend items if needed */
+  .overall-monthly-chart-container canvas + div ul li {
+    margin-bottom: 5px; /* Space between legend items */
+  }
+
+  /* Optional: Adjust font size for legend on smaller screens */
+  .overall-monthly-chart-container canvas + div ul li span {
+    font-size: 13px; /* Slightly smaller font for legend labels */
+  }
+
+  /* Adjust chart legend position for mobile title */
+  .monthly-summary-section .section-title {
+    font-size: 1.5em; /* Smaller title */
   }
 }
 
 @media (max-width: 480px) {
   .section-title {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
   }
 
   .habit-table th,
   .habit-table td {
-    font-size: 0.8rem;
-    /* Consider even smaller padding or allowing some wrapping for day names */
+    font-size: 0.75rem;
+  }
+
+  /* Adjust table column width for very small mobile to match */
+  .habit-table th:nth-child(n+3),
+  .habit-table td:nth-child(n+3) {
+    min-width: 75px; /* Even smaller fixed width */
+    width: 75px; /* Even smaller fixed width */
   }
 
   /* Stack navigation buttons for very small screens */
@@ -652,7 +687,34 @@ body {
     order: -1; /* Place label on top */
   }
 
-  .progress-grid {
-    grid-template-columns: 1fr 1fr; /* Two columns for very small screens */
+  .daily-progress-card {
+    flex: 0 0 85px; /* Even smaller fixed width for very small screens */
+    min-height: 130px;
+  }
+
+  .plant-container {
+    height: 60px; /* Smaller plant container height */
+  }
+
+  .daily-progress-card .day-label {
+    font-size: 0.9rem;
+  }
+
+  .daily-progress-card .percentage {
+    font-size: 0.8rem;
+  }
+
+  /* Monthly Summary Chart specific adjustments for 480px */
+  .overall-monthly-chart-container {
+    height: 200px;
+  }
+
+  .overall-monthly-chart-container canvas + div ul {
+    padding-left: 10px; /* Adjust padding for smaller screens */
+    padding-right: 10px;
+  }
+
+  .overall-monthly-chart-container canvas + div ul li span {
+    font-size: 12px; /* Even smaller font */
   }
 }

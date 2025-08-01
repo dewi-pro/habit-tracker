@@ -16,8 +16,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { db } from '../firebase'; // Import db instance
 
-// Receive weekDates as a prop
-const HabitTable = ({ habits, checked, currentWeek, toggleCheckbox, setHabits, setChecked, days, numberOfWeeks, user, weekDates }) => {
+// Receive weekDates and habitTableContainerRef as props
+const HabitTable = ({ habits, checked, currentWeek, toggleCheckbox, setHabits, setChecked, days, numberOfWeeks, user, weekDates, habitTableContainerRef }) => {
   const [editingHabitIndex, setEditingHabitIndex] = useState(null);
   const [editedHabitName, setEditedHabitName] = useState('');
 
@@ -121,7 +121,8 @@ const HabitTable = ({ habits, checked, currentWeek, toggleCheckbox, setHabits, s
   };
 
   return (
-    <div className="habit-table-container">
+    // Attach the habitTableContainerRef to the .habit-table-container div
+    <div className="habit-table-container" ref={habitTableContainerRef}>
       <table className="habit-table">
         <thead>
           <tr>
