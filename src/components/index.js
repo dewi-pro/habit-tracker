@@ -387,20 +387,20 @@ useEffect(() => {
           Save Progress
         </button>
 
-        {/* Week Controls Component - Pass calculatedNumberOfWeeks */}
-        <WeekControls
-          currentWeek={currentWeek}
-          setCurrentWeek={setCurrentWeek}
-          calculatedNumberOfWeeks={calculatedNumberOfWeeks}
-          monthLabel={monthLabel}
-        />
-
         {/* Monthly Summary Component */}
         <MonthlySummary
           habits={habits}
           checked={checked}
           days={days}
           numberOfWeeks={numberOfWeeks}
+        />
+
+        {/* Week Controls Component - Pass calculatedNumberOfWeeks */}
+        <WeekControls
+          currentWeek={currentWeek}
+          setCurrentWeek={setCurrentWeek}
+          calculatedNumberOfWeeks={calculatedNumberOfWeeks}
+          monthLabel={monthLabel}
         />
         </div>
     </div>
