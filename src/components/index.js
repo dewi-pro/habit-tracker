@@ -307,7 +307,10 @@ useEffect(() => {
   return (
     <div className="habit-tracker-container">
       {/* Header Section */}
-      <header className="app-header">
+        <header className="app-header">
+        <div className="header-brand">
+          <h1 className="app-title">Habit Tracker</h1>
+        </div>
         <span className="user-info">Hi, {user ? user.email : 'Guest'}</span>
         <button className="logout-btn" onClick={logout}>Logout</button>
       </header>
@@ -403,6 +406,9 @@ useEffect(() => {
           monthLabel={monthLabel}
         />
         </div>
+         <footer className="app-footer">
+        <p className="attribution">Created by Harukichi v1</p>
+      </footer>
     </div>
   );
 };

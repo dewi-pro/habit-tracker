@@ -547,6 +547,40 @@ body {
     color: var(--success-color); /* Use variable for consistency */
 }
 
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background-color: #f5f5f5; /* A light background */
+}
+
+.header-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px; /* Space between title and version */
+}
+
+.app-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.attribution {
+  font-size: 0.8rem;
+  color: #555;
+}
+.app-footer {
+  text-align: center;
+  padding: 20px 0;
+  color: #888; /* A light gray for a subtle look */
+  font-size: 0.85rem;
+}
+
+.attribution {
+  margin: 0;
+}
 /* ------------------------------------------- */
 /* Media Queries for Responsiveness - REFINED */
 /* ------------------------------------------- */
